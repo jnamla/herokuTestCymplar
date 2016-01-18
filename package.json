@@ -10,6 +10,7 @@
     "url": "https://github.com/Neulinet/cymplar-app/issues"
   },
   "scripts": {
+    "postinstall": "bower install && tsd reinstall --clean && tsd link && tsd rebundle && gulp postinstall",
     "start": "gulp serve --env dev",
     "test": "gulp test"
   },
