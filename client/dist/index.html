@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title ng-bind="$state.current.name + ' | Cymplar 2'">Cymplar 2</title>
+  <base href="/">
+  <meta name="description" content="">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- csslib:css -->
+  <link rel="stylesheet" href="lib/bootstrap.min.css">
+  <link rel="stylesheet" href="lib/angular-toastr.css">
+  <!-- endinject -->
+  
+  <!-- inject:css -->
+  <link rel="stylesheet" href="index.css">
+  <!-- endinject -->
+
+</head>
+<body data-app-version="0.0.0">
+
+  <main-navbar></main-navbar>
+
+  <div ui-view class="main-container container-fluid"></div>
+
+  <!-- jslib:js -->
+  <script src="lib/es6-shim.min.js"></script>
+  <script src="lib/system.src.js"></script>
+  <script src="lib/system.config.js"></script>
+  <script src="lib/moment.js"></script>
+  <script src="lib/angular.js"></script>
+  <script src="lib/ui-bootstrap.js"></script>
+  <script src="lib/ui-bootstrap-tpls.js"></script>
+  <script src="lib/angular-ui-router.js"></script>
+  <script src="lib/angular-sanitize.js"></script>
+  <script src="lib/angular-animate.js"></script>
+  <script src="lib/angular-touch.js"></script>
+  <script src="lib/angular-messages.js"></script>
+  <script src="lib/angular-toastr.js"></script>
+  <script src="lib/angular-toastr.tpls.js"></script>
+  <!-- endinject -->
+  
+  <script>
+    System.import('bootstrap')
+      .catch(function (e) {
+        console.error(e);
+      });
+  </script>
+
+</body>
+</html>
