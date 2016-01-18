@@ -19,7 +19,7 @@ process.env.CYMPLAR_MONGO_URI = CYMPLAR_MONGO_URI;
 const CYMPLAR_SECRET: string = argv['CYMPLAR_SECRET'] || process.env.CYMPLAR_SECRET || 'cymplarSecret';
 process.env.CYMPLAR_SECRET = CYMPLAR_SECRET;
 
-export const PORT: number = argv['port'] || 5555;
+export const PORT: number = argv['port'] || process.env.PORT || 5555;
 export const LIVE_RELOAD_PORT: number = argv['reload-port'] || 4002;
 export const APP_BASE: string = argv['base'] || '/';
 export const APP_VERSION: string = pkg.version;
