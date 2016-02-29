@@ -2,6 +2,11 @@
   "name": "cymplar2",
   "version": "0.0.0",
   "description": "Cymplar version 2",
+  "contributors": [
+    "Johanna Palma <johanna@neuli.net>",
+    "Neil Tran <neil@neuli.net>",
+    "Roger Padilla <rogerjose81@gmail.com>"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/Neulinet/cymplar-app.git"
@@ -14,7 +19,6 @@
     "start": "gulp serve --env dev",
     "test": "gulp test"
   },
-  "author": "Roger Padilla <rogerpadilla>",
   "private": true,
   "devDependencies": {
     "async": "^1.5.0",
@@ -105,6 +109,7 @@
     "yargs": "^3.31.0",
     "angular": "^1.4.8",
     "angular-animate": "^1.4.8",
+    "angular-bootstrap": "^0.12.2",
     "angular-cookies": "^1.4.8",
     "angular-messages": "^1.4.8",
     "angular-resource": "^1.4.8",
@@ -124,8 +129,7 @@
     "mongoose": "^4.3.0",
     "requirejs": "^2.1.22",
     "serve-static": "^1.10.0",
-    "systemjs": "^0.19.6",
-    "bower": "^1.6.8"
+    "systemjs": "^0.19.6"
   },
   "engines": {
     "node": "^4.2.1"
