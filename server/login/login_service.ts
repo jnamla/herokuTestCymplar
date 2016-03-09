@@ -7,30 +7,38 @@ import {ObjectUtil} from '../../client/core/util';
 import {AccountUserModel} from '../core/model';
 import {LogIn, AuthenticationResponse, AccountUser, AccountOrganizationMember, ModelOptions} from '../../client/core/dto';
 import {accountOrganizationMemberService} from '../account_organization_member/account_organization_member_service';
-
+import {accountOrganizationService} from '../account_organization/account_organization_service';
+import {accountUserService} from '../account_user/account_user_service';
 
 export class LoginService {
 
 	createOne(data: LogIn, options: ModelOptions = {}): Promise<string> {
-		if (ObjectUtil.isBlank(data.organization)) {
-			return new Promise(function (fulfill, reject) {
-			  reject(new Error('An organization should be chosen'));
-			});
-    	}
 		
-		if (ObjectUtil.isBlank(data.username) || ObjectUtil.isBlank(data.password)) {
-			return new Promise(function (fulfill, reject) {
-			  reject(new Error('Invalid credentials'));
-			});
-    	}
-
 		return new Promise<string>((resolve: Function, reject: Function) => {
+
+			if (ObjectUtil.isBlank(data.organization)) {
+				return reject(new Error('An organization should be chosen'));
+			}
+			
+			if (ObjectUtil.isBlank(data.username) || ObjectUtil.isBlank(data.password)) {
+				return reject(new Error('Invalid credentials'));
+			}
+		
 			this.validateAccountUser(data)
 			.then((accountUser: AccountUser) => {
 				const authenticationResp: AuthenticationResponse = {};
 				authenticationResp.token = this.getToken(accountUser);
-				resolve(authenticationResp);
-		}, (err: any) => reject(err));
+				
+				const loginPromises: Promise<any>[] = [];
+				loginPromises.push(Promise.resolve(authenticationResp));
+				
+								
+				return Promise.all(loginPromises);
+			})
+			.then((results: any) => {
+				resolve(results[0]); // Sends the authentication response
+			})
+			.catch((err) => reject(err));
 		});
 	}
 
@@ -51,28 +59,31 @@ export class LoginService {
 		return new Promise<AccountUser>((resolve: Function, reject: Function) => {
 			const accountUserModelOptions: ModelOptions = {
 				requireAuthorization: false,
-				population: {
-					path: 'user',
-					match: { username: data.username }
-				},
 				copyAuthorizationData: '',
-				validatePostSearchAuthData: false
+				validatePostSearchAuthData: false,
+				projection: '_id'
 			};
-			accountOrganizationMemberService.findOne({ organization: data.organization }, accountUserModelOptions)
+			
+			accountUserService.findOne({ username: data.username }, accountUserModelOptions)
+			.then((accountUser: AccountUser) => {
+				const accountMemberModelOptions: ModelOptions = {
+					requireAuthorization: false,
+					copyAuthorizationData: '',
+					validatePostSearchAuthData: false,
+					population: 'user',
+					additionalData: { organization: data.organization, user: accountUser._id }
+				};
+			
+				return accountOrganizationMemberService.findOne({}, accountMemberModelOptions);
+			})
 			.then((accountOrganizationMember: AccountOrganizationMember) => {
-				if (ObjectUtil.isBlank(accountOrganizationMember.user)) {
-					reject(new Error('The user does not exist within this organization'));
-					return;
-				}
-				if (!bcrypt.compareSync(data.password, accountOrganizationMember.user.password)) {
-					reject(new Error('Invalid password'));
-					return;
+				
+				if (!bcrypt.compareSync(data.password, ObjectUtil.getStringUnionProperty(accountOrganizationMember.user, 'password'))) {
+					return reject(new Error('Invalid password'));
 				}
 				resolve(accountOrganizationMember.user);
 			})
-			.catch((err) => {
-				return reject(err);
-			});
+			.catch((err: Error) => reject(err));
 		});
 	}
 

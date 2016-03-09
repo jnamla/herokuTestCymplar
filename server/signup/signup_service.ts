@@ -23,11 +23,16 @@ export class SignupService {
 			.then((accountUser: AccountUser) => {
 				options.authorization.user = accountUser;
 				options.copyAuthorizationData = 'user';
-				return accountOrganizationService.createOneWithMember(data, options); 
+				
+				const autoAccountCreationPromises: Promise<AccountOrganization>[] = [];
+				autoAccountCreationPromises.push(accountOrganizationService.createOneWithMember(data, options));
+				
+				
+				return Promise.all(autoAccountCreationPromises); 
 			})
-			.then((accountOrganization: AccountOrganization) => { 
+			.then((accountOrganizations: AccountOrganization[]) => { 
 				const response = { 
-					init: accountOrganization._id,
+					init: accountOrganizations[0]._id,
 					token: loginService.getToken(options.authorization.user)
 				};
 				fulfill(response); 
@@ -36,8 +41,7 @@ export class SignupService {
 				if (ObjectUtil.isPresent(options.authorization.user)) {
 					accountUserService.removeSkipingHooks({ _id: options.authorization.user._id });
 				} 
-				reject(err);
-				return; 
+				reject(err); 
 			});
 		});
 	}

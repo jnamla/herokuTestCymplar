@@ -20,13 +20,37 @@ export class SalesLeadContactService extends BaseService<SalesLeadContact> {
 		super(SalesLeadContactModel, defaultModelOptions);
 	}
 
+	createOneSimpleContact(data: SalesLeadContact, newOptions: ModelOptions = {}): Promise<AddressBookContact> {
+		return new Promise<AddressBookContact>((resolve: Function, reject: Function) => {
+			this.createOne(data, newOptions)
+			.then((contact: SalesLeadContact) => {
+				resolve(contact.contact);
+			})
+			.catch((err) => { 
+				return reject(err);
+			});
+		});
+	}
+	
+	removeOneSimpleContact(data: SalesLeadContact, newOptions: ModelOptions = {}): Promise<AddressBookContact> {
+		return new Promise<AddressBookContact>((resolve: Function, reject: Function) => {
+			this.removeOne(data, newOptions)
+			.then((contact: SalesLeadContact) => {
+				resolve(contact.contact);
+			})
+			.catch((err) => { 
+				return reject(err);
+			});
+		});
+	}
+	
 	//Returns the contacts that are part of the lead
 	findContactsPerLead(newOptions: ModelOptions = {}): Promise<string[]> {
 		return new Promise<string[]>((resolve: Function, reject: Function) => {
 			const salesLeadModelOptions: ModelOptions = {
 				authorization: newOptions.authorization,
 				population: {
-					path: 'contact -id'
+					path: 'contact -_id'
 				},
 				distinct: 'contact',
 				copyAuthorizationData: 'lead'
@@ -36,10 +60,7 @@ export class SalesLeadContactService extends BaseService<SalesLeadContact> {
 			.then((contacts: string[]) => {
 				resolve(contacts);
 			})
-			.catch((err) => { 
-				reject(err);
-				return;
-			});
+			.catch((err) => reject(err));
 		});
 	}
 	
@@ -57,10 +78,7 @@ export class SalesLeadContactService extends BaseService<SalesLeadContact> {
 			.then((leadContacts: AddressBookContact[]) => {
 				resolve(leadContacts);
 			})
-			.catch((err) => { 
-				reject(err);
-				return;
-			});
+			.catch((err) => reject(err));
 		});
 	}
 	
@@ -81,10 +99,10 @@ export class SalesLeadContactService extends BaseService<SalesLeadContact> {
 					const contacts: string[] = [];
 					
 					for (let i = 0; i < leadContacts.length; i++ ) {
-						const current: AddressBookContact = leadContacts[i]['contact'];
+						const current = leadContacts[i]['contact'];
 						contacts.push(current._id);
-						if (groups.indexOf(current.group) < 0) {
-							groups.push(current.group);
+						if (groups.indexOf(current['group']) < 0) {
+							groups.push(current['group']);
 						}
 					}
 					
@@ -105,20 +123,16 @@ export class SalesLeadContactService extends BaseService<SalesLeadContact> {
 			.then((leadContacts: AddressBookContact[]) => {
 				resolve(leadContacts);
 			})
-			.catch((err) => { 
-				reject(err);
-				return;
-			});
+			.catch((err: Error) => reject(err));
 		});
 	}
 	
+	/* tslint:disable */ // In this switches the default is not needed
 	protected addAuthorizationDataInCreate(modelOptions: ModelOptions = {}) {
 		switch (modelOptions.copyAuthorizationData) {
 			case 'lead':
 				modelOptions.additionalData['lead'] = modelOptions.authorization.leadMember.lead;
 				modelOptions.additionalData['createdBy'] = modelOptions.authorization.leadMember._id;
-				break;
-			default:
 				break;
 		}
 	}
@@ -128,10 +142,9 @@ export class SalesLeadContactService extends BaseService<SalesLeadContact> {
 			case 'lead':
 				modelOptions.additionalData['lead'] = modelOptions.authorization.leadMember.lead;
 				break;
-			default:
-				break;
 		}
 	}
+	/* tslint:enable */
 	
 	protected authorizationEntity(modelOptions: ModelOptions = {}, roles: string[] = []): AuthorizationResponse {
 		if (modelOptions.requireAuthorization) {
@@ -144,7 +157,7 @@ export class SalesLeadContactService extends BaseService<SalesLeadContact> {
 				return this.createAuthorizationResponse();
 			}
 
-			if (roles.length > 0 && roles.indexOf(modelOptions.authorization.organizationMember.role.code) < 0) {
+			if (roles.length > 0 && !this.isAuthorizedInLead(modelOptions.authorization, roles)) {
 				return this.createAuthorizationResponse('Sales lead contact: Unauthorized contact role');
 			}
 		}
@@ -164,7 +177,7 @@ export class SalesLeadContactService extends BaseService<SalesLeadContact> {
 	protected validateAuthDataPostSearchRemove(modelOptions: ModelOptions = {}, 
 		data?: SalesLeadContact): AuthorizationResponse {
 		const authRoles = ['OWNER'];
-		const isOrgOwner = authRoles.indexOf(modelOptions.authorization.organizationMember.role.code) >= 0;
+		const isOrgOwner = this.isAuthorizedInOrg(modelOptions.authorization, authRoles);
 		const isLeadMember =  modelOptions.authorization.leadMember.lead === data.lead;
 		if (isOrgOwner || isLeadMember) {
 			return this.createAuthorizationResponse();

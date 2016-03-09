@@ -33,24 +33,20 @@ export abstract class BaseService<T extends BaseDto> extends BaseAuthorizationSe
 			const txModelOptions = this.obtainTransactionModelOptions(newOptions);
 			const authorizationResponse = this.isCreateAuthorized(txModelOptions);
 			if (!authorizationResponse.isAuthorized) {
-				reject(new Error(authorizationResponse.errorMessage));
-				return;
+				return reject(new Error(authorizationResponse.errorMessage));
 			}
 			this.addAuthorizationDataInCreate(txModelOptions); // Adds required authorization data in create	
 			this.transactionModelOptionsAddData(data, txModelOptions);
 			const newDocument = new this.Model(data);
 			newDocument.save((err: Error, savedDoc: any) => {
 				if (err) {
-					reject(err);
-					return;
+					return reject(err);
 				}
 				savedDoc.populate(txModelOptions.population, (err: Error, populatedObj: any) => {
 					if (err) {
-						reject(err);
-						return;
+						return reject(err);
 					}
-					resolve(populatedObj.toObject());
-					return;
+					return resolve(populatedObj.toObject());
 				});
 			});	
 		});		
@@ -60,27 +56,23 @@ export abstract class BaseService<T extends BaseDto> extends BaseAuthorizationSe
 		return new Promise<T>((resolve: Function, reject: Function) => {
 			const authorizationResponse = this.isUpdateAuthorized(newOptions);
 			if (!authorizationResponse.isAuthorized) {
-				reject(new Error(authorizationResponse.errorMessage));
-				return;
+				return reject(new Error(authorizationResponse.errorMessage));
 			}
 			this.Model.findById(data._id, newOptions.projection)
 			.exec((err: Error, foundObj: any) => {
 				if (err) {
-					reject(err);
-					return;
+					return reject(err);
 				}
 			
 				if (ObjectUtil.isBlank(foundObj)) {
-					reject(new Error('Object could not be found'));
-					return;
+					return reject(new Error('Object could not be found'));
 				}
 				
 				
 				if (newOptions.validatePostSearchAuthData) {
 					const authorizationResponse = this.validateAuthDataPostSearchUpdate(newOptions, foundObj);
 					if (!authorizationResponse.isAuthorized) {
-						reject(new Error(authorizationResponse.errorMessage));
-						return;
+						return reject(new Error(authorizationResponse.errorMessage));
 					}	
 				}
 					
@@ -101,23 +93,17 @@ export abstract class BaseService<T extends BaseDto> extends BaseAuthorizationSe
 				
 				objectToUpdate.save((err: Error, savedDoc: any) => {
 					if (err) {
-						reject(err);
-						return;
+						return reject(err);
 					}
 					savedDoc.populate(txModelOptions.population, (err: Error, populatedObj: any) => {
 						if (err) {
-							reject(err);
-							return;
+							return reject(err);
 						}
 						resolve(populatedObj.toObject());
-						return;
 					});
 				});
 			})
-			.catch((err) => { 
-				reject(err);
-				return;
-			});
+			.catch((err) => reject(err));
 		});
 	}
 	
@@ -127,27 +113,23 @@ export abstract class BaseService<T extends BaseDto> extends BaseAuthorizationSe
 			const txModelOptions = this.obtainTransactionModelOptions(newOptions);
 			const authorizationResponse = this.isUpdateAuthorized(txModelOptions);
 			if (!authorizationResponse.isAuthorized) {
-				reject(new Error(authorizationResponse.errorMessage));
-				return;
+				return reject(new Error(authorizationResponse.errorMessage));
 			}
 			this.Model.find(data, txModelOptions.projection)
 			.exec((err: Error, foundObj: any) => {
 				if (err) {
-					reject(err);
-					return;
+					return reject(err);
 				}
 			
 				if (ObjectUtil.isBlank(foundObj)) {
-					reject(new Error('Object could not be found'));
-					return;
+					return reject(new Error('Object could not be found'));
 				}
 				
 				
 				if (txModelOptions.validatePostSearchAuthData) {
 					const authorizationResponse = this.validateAuthDataPostSearchUpdate(txModelOptions, foundObj);
 					if (!authorizationResponse.isAuthorized) {
-						reject(new Error(authorizationResponse.errorMessage));
-						return;
+						return reject(new Error(authorizationResponse.errorMessage));
 					}	
 				}
 					
@@ -157,16 +139,13 @@ export abstract class BaseService<T extends BaseDto> extends BaseAuthorizationSe
 				
 				foundObj.save((err: Error, savedDoc: any) => {
 					if (err) {
-						reject(err);
-						return;
+						return reject(err);
 					}
 					savedDoc.populate(txModelOptions.population, (err: Error, populatedObj: any) => {
 						if (err) {
-							reject(err);
-							return;
+							return reject(err);
 						}
 						resolve(populatedObj.toObject());
-						return;
 					});
 				});
 			});
@@ -178,27 +157,23 @@ export abstract class BaseService<T extends BaseDto> extends BaseAuthorizationSe
 			const txModelOptions = this.obtainTransactionModelOptions(newOptions);
 			const authorizationResponse = this.isRemoveAuthorized(txModelOptions);
 			if (!authorizationResponse.isAuthorized) {
-				reject(new Error(authorizationResponse.errorMessage));
-				return;
+				return reject(new Error(authorizationResponse.errorMessage));
 			}
 			this.addAuthorizationDataPreSearch(txModelOptions);	
 			this.transactionModelOptionsAddData(data, txModelOptions);	
 			const search = this.obtainSearchExpression(data, txModelOptions);
 			this.Model.findOne(search).populate(txModelOptions.population).exec((err: Error, foundDoc: any) => {
 				if (err) {
-					reject(err);
-					return;
+					return reject(err);
 				}
 				if (ObjectUtil.isBlank(foundDoc)) {
-					reject(new Error('Object could not be found'));
-					return;
+					return reject(new Error('Object could not be found'));
 				}
 				
 				if (txModelOptions.validatePostSearchAuthData) {
 					const authorizationResponse = this.validateAuthDataPostSearchRemove(txModelOptions, foundDoc);
 					if (!authorizationResponse.isAuthorized) {
-						reject(new Error(authorizationResponse.errorMessage));
-						return;
+						return reject(new Error(authorizationResponse.errorMessage));
 					}	
 				}
 				
@@ -213,17 +188,12 @@ export abstract class BaseService<T extends BaseDto> extends BaseAuthorizationSe
 			.then((objectToRemove: any) => {
 				objectToRemove.remove((err: Error) => {
 					if (err) {
-						reject(err);
-						return;
+						return reject(err);
 					}
 					resolve(objectToRemove.toObject());
-					return;
 				});
 			})
-			.catch((err) => { 
-				reject(err);
-				return;
-			});
+			.catch((err) => reject(err));
 		});
 	}
 	
@@ -232,24 +202,20 @@ export abstract class BaseService<T extends BaseDto> extends BaseAuthorizationSe
 			const txModelOptions = this.obtainTransactionModelOptions(newOptions);
 			const authorizationResponse = this.isRemoveAuthorized(txModelOptions);
 			if (!authorizationResponse.isAuthorized) {
-				reject(new Error(authorizationResponse.errorMessage));
-				return;
+				return reject(new Error(authorizationResponse.errorMessage));
 			}
 			this.Model.findById(id).populate(txModelOptions.population).exec((err: Error, foundDoc: any) => {
 				if (err) {
-					reject(err);
-					return;
+					return reject(err);
 				}
 				if (ObjectUtil.isBlank(foundDoc)) {
-					reject(new Error('Object could not be found'));
-					return;
+					return reject(new Error('Object could not be found'));
 				}
 				
 				if (txModelOptions.validatePostSearchAuthData) {
 					const authorizationResponse = this.validateAuthDataPostSearchRemove(txModelOptions, foundDoc);
 					if (!authorizationResponse.isAuthorized) {
-						reject(new Error(authorizationResponse.errorMessage));
-						return;
+						return reject(new Error(authorizationResponse.errorMessage));
 					}	
 				}
 					
@@ -264,17 +230,12 @@ export abstract class BaseService<T extends BaseDto> extends BaseAuthorizationSe
 			.then((objectToRemove: any) => {
 				objectToRemove.remove((err: Error) => {
 					if (err) {
-						reject(err);
-						return;
+						return reject(err);
 					}
 					resolve(objectToRemove.toObject());
-					return;
 				});
 			})
-			.catch((err) => { 
-				reject(err);
-				return;
-			});
+			.catch((err) => reject(err));
 		});
 	}
 	
@@ -283,24 +244,20 @@ export abstract class BaseService<T extends BaseDto> extends BaseAuthorizationSe
 			const txModelOptions = this.obtainTransactionModelOptions(newOptions);
 			const authorizationResponse = this.isRemoveAuthorized(txModelOptions);
 			if (!authorizationResponse.isAuthorized) {
-				reject(new Error(authorizationResponse.errorMessage));
-				return;
+				return reject(new Error(authorizationResponse.errorMessage));
 			}
 			this.addAuthorizationDataPreSearch(txModelOptions);	
 			this.transactionModelOptionsAddData(data, txModelOptions);
 			this.Model.find(ObjectUtil.createFilter(data)).populate(txModelOptions.population)
 			.exec((err, foundObjs) => {
 				if (err) {
-					reject(err);
-					return;
+					return reject(err);
 				}
 				DatabaseObjectUtil.removeArrayPromise(foundObjs)
 				.then((results: any) => {
 					resolve(results);
 				})
-				.catch((err: any) => {
-					reject(err);
-				});	
+				.catch((err) => reject(err));	
 			});
 		});
 	}
@@ -314,8 +271,7 @@ export abstract class BaseService<T extends BaseDto> extends BaseAuthorizationSe
 			const txModelOptions = this.obtainTransactionModelOptions(newOptions);
 			const authorizationResponse = this.isSearchAuthorized(txModelOptions);
 			if (!authorizationResponse.isAuthorized) {
-				reject(new Error(authorizationResponse.errorMessage));
-				return;
+				return reject(new Error(authorizationResponse.errorMessage));
 			}
 			this.addAuthorizationDataPreSearch(txModelOptions);	
 			this.transactionModelOptionsAddData(data, txModelOptions);	
@@ -324,11 +280,9 @@ export abstract class BaseService<T extends BaseDto> extends BaseAuthorizationSe
 			 { sort: '-createdAt', lean: true }).populate(txModelOptions.population)
 			.exec((err, foundObjs) => {
 				if (err) {
-					reject(err);
-					return;
+					return reject(err);
 				}
 				resolve(foundObjs);
-				return;
 			});
 		});
 	}
@@ -338,30 +292,25 @@ export abstract class BaseService<T extends BaseDto> extends BaseAuthorizationSe
 			const txModelOptions = this.obtainTransactionModelOptions(newOptions);
 			const authorizationResponse = this.isSearchAuthorized(txModelOptions);
 			if (!authorizationResponse.isAuthorized) {
-				reject(new Error(authorizationResponse.errorMessage));
-				return;
+				return reject(new Error(authorizationResponse.errorMessage));
 			}
 			this.Model.findById(id, txModelOptions.projection, { lean: true }).populate(txModelOptions.population)
 			.exec((err: Error, foundObj: T) => {
 				if (err) {
-					reject(err);
-					return;
+					return reject(err);
 				}
 				if (ObjectUtil.isBlank(foundObj)) {
-					reject(new Error('Object not found'));
-					return;
+					return reject(new Error('Object not found'));
 				}
 				
 				if (txModelOptions.validatePostSearchAuthData) {
 					const authorizationResponse = this.validateAuthDataPostSearch(txModelOptions, foundObj);
 					if (!authorizationResponse.isAuthorized) {
-						reject(new Error(authorizationResponse.errorMessage));
-						return;
+						return reject(new Error(authorizationResponse.errorMessage));
 					}
 				}
 				
 				resolve(foundObj);
-				return;
 			});
 		});
 	}
@@ -376,11 +325,9 @@ export abstract class BaseService<T extends BaseDto> extends BaseAuthorizationSe
 			this.Model.findOne(ObjectUtil.createFilter(data, false), null, { sort: '-createdAt', lean: true })
 			.exec((err, foundObj) => {
 				if (err) {
-					reject(err);
-					return;
+					return reject(err);
 				}
 				resolve(ObjectUtil.isPresent(foundObj));
-				return;
 			});
 		});
 	}
@@ -390,38 +337,34 @@ export abstract class BaseService<T extends BaseDto> extends BaseAuthorizationSe
 			const txModelOptions = this.obtainTransactionModelOptions(newOptions);
 			const authorizationResponse = this.isSearchAuthorized(txModelOptions);	
 			if (!authorizationResponse.isAuthorized) {
-				reject(new Error(authorizationResponse.errorMessage));
-				return;
+				return reject(new Error(authorizationResponse.errorMessage));
 			}
+			
 			this.addAuthorizationDataPreSearch(txModelOptions);	
 			this.transactionModelOptionsAddData(data, txModelOptions);	
 			const search = this.obtainSearchExpression(data, txModelOptions);
 			if (Object.keys(search).length < 1) {
-				reject(new Error('At least one filter value should be specified'));
+				return reject(new Error('At least one filter value should be specified'));
 			}
 			
 			this.Model.findOne(search, txModelOptions.projection,
 			 { sort: '-createdAt', lean: true }).populate(txModelOptions.population)
 			.exec((err: Error, foundObj: T) => {
 				if (err) {
-					reject(err);
-					return;
+					return reject(err);
 				}
 				if (ObjectUtil.isBlank(foundObj)) {
-					reject(new Error('Object not found'));
-					return;
+					return reject(new Error('Object not found'));
 				}
 				
 				if (txModelOptions.validatePostSearchAuthData) {
 					const authorizationResponse = this.validateAuthDataPostSearch(txModelOptions, foundObj);
 					if (!authorizationResponse.isAuthorized) {
-						reject(new Error(authorizationResponse.errorMessage));
-						return;
+						return reject(new Error(authorizationResponse.errorMessage));
 					}
 				}
 				
 				resolve(foundObj);
-				return;
 			});
 		});
 	}
@@ -431,8 +374,7 @@ export abstract class BaseService<T extends BaseDto> extends BaseAuthorizationSe
 			const txModelOptions = this.obtainTransactionModelOptions(newOptions);
 			const authorizationResponse = this.isSearchAuthorized(txModelOptions);
 			if (!authorizationResponse.isAuthorized) {
-				reject(new Error(authorizationResponse.errorMessage));
-				return;
+				return reject(new Error(authorizationResponse.errorMessage));
 			}
 			this.addAuthorizationDataPreSearch(txModelOptions);	
 			this.transactionModelOptionsAddData(data, txModelOptions);	
@@ -440,11 +382,9 @@ export abstract class BaseService<T extends BaseDto> extends BaseAuthorizationSe
 			this.Model.find(search).distinct(txModelOptions.distinct)
 			.exec((err, foundObjs) => {
 				if (err) {
-					reject(err);
-					return;
+					return reject(err);
 				}
 				resolve(foundObjs);
-				return;
 			});
 		});
 	}

@@ -39,20 +39,15 @@ export class AddressBookGroupService extends BaseService<AddressBookGroup> {
 					authorization: options.authorization,
 					copyAuthorizationData: 'createdBy'
 				};
-				const promises: Promise<AddressBookGroup>[] = [];
+				const loadDataFromGroupPromises: Promise<AddressBookGroup>[] = [];
 				for (let i = 0; i < groups.length; i++) {
-					promises.push(this.loadGroup(groups[i], childrenModelOptions));
+					loadDataFromGroupPromises.push(this.loadGroup(groups[i], childrenModelOptions));
 				}
 				
-				return Promise.all(promises);	
+				return Promise.all(loadDataFromGroupPromises);	
 			})
-			.then((results: any) => {
-				fulfill(results);
-			})
-			.catch((err: any) => {
-				reject(err);
-				return;
-			});
+			.then((results: any) => fulfill(results))
+			.catch((err) => reject(err));
 		});
 	}
 	
@@ -65,10 +60,7 @@ export class AddressBookGroupService extends BaseService<AddressBookGroup> {
 				groupToSend.contacts = results[0];
 				fulfill(groupToSend);
 			})
-			.catch((err: any) => {
-				reject(err);
-				return;
-			});
+			.catch((err) => reject(err));
 		});
 	}
 	

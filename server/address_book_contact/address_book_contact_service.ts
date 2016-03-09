@@ -19,8 +19,7 @@ export class AddressBookContactService extends BaseService<AddressBookContact> {
 		return new Promise<AddressBookContact[]>((resolve: Function, reject: Function) => {
 
 			if (ObjectUtil.isBlank(data.group)) {
-				reject(new Error('A group should be specified'));
-				return;
+				return reject(new Error('A group should be specified'));
 			}
 				
 			const groupModelOptions: ModelOptions = {
@@ -34,18 +33,14 @@ export class AddressBookContactService extends BaseService<AddressBookContact> {
 			addressBookGroupService.findOne({}, groupModelOptions)
 			.then((group: AddressBookGroup) => {
 				if (ObjectUtil.isBlank(group._id)) {
-					reject(new Error('A contact cannot be added to a group that does not belong to this user'));
-					return;
+					return reject(new Error('A contact cannot be added to a group that does not belong to this user'));
 				}
 				return super.createOne(data, newOptions);
 			})
 			.then((contacts: AddressBookContact[]) => {
 				resolve(contacts);
 			})
-			.catch((err) => { 
-				reject(err);
-				return;
-			});
+			.catch((err) => reject(err));
 		});
 	}
 	
@@ -59,10 +54,7 @@ export class AddressBookContactService extends BaseService<AddressBookContact> {
 			.then((contacts: AddressBookContact[]) => {
 				resolve(contacts);
 			})
-			.catch((err) => { 
-				reject(err);
-				return;
-			});
+			.catch((err) => reject(err));
 		});
 	}
 	
@@ -72,10 +64,7 @@ export class AddressBookContactService extends BaseService<AddressBookContact> {
 			.then((contacts: any[]) => {
 				resolve(contacts);
 			})
-			.catch((err) => { 
-				reject(err);
-				return;
-			});
+			.catch((err) => reject(err));
 		});
 	}
 	
@@ -93,15 +82,30 @@ export class AddressBookContactService extends BaseService<AddressBookContact> {
 				.then((aggregation: any[]) => {
 					resolve(aggregation);
 				})
-				.catch((err) => { 
-					reject(err);
-					return;
-				});
+				.catch((err) => reject(err));
 			})
-			.catch((err) => { 
-				reject(err);
-				return;
-			});
+			.catch((err) => reject(err));
+		});
+	}
+	
+	//TO DO - get rid of it once customizable status is working
+	getLeadPerGroupOldStatus(data: AddressBookGroup, newOptions: ModelOptions = {}): Promise<string[]> {
+		return new Promise<string[]>((resolve: Function, reject: Function) => {
+			this.getUsersGroups(data, newOptions)
+			.then((idGroups: string[]) => {
+				newOptions.additionalData = { group: { $in: idGroups }};
+				newOptions.distinct = '_id';
+				newOptions.copyAuthorizationData = '';
+				return this.findDistinct(data, newOptions);
+			})
+			.then((contacts: string[]) => {
+				salesLeadService.getLeadsPerGroupWithStatus(contacts)
+				.then((aggregation: any[]) => {
+					resolve(aggregation);
+				})
+				.catch((err: Error) => reject(err));
+			})
+			.catch((err: Error) => reject(err));
 		});
 	}
 	
@@ -142,10 +146,7 @@ export class AddressBookContactService extends BaseService<AddressBookContact> {
 				.then((idGroups: string[]) => {
 					resolve(idGroups);
 				})
-				.catch((err) => { 
-					reject(err);
-					return;
-				});	
+				.catch((err) => reject(err));	
 			}
 		});
 	}

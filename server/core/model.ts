@@ -154,7 +154,7 @@ const schemas = {
     name: { type: String },
     email: { type: String, required: true },
     position: { type: String },
-    contactNumber: { type: String, required: true },
+    contactNumber: { type: String },
     altContactNumber: { type: String },
     organization: { type: ObjectId, ref: 'accountOrganization', required: true },
     user: { type: ObjectId, ref: 'accountUser', required: true },
@@ -170,6 +170,17 @@ const schemas = {
     grantUpdate: {type: Boolean, required: true },
     grantRead: {type: Boolean, required: true },
     grantInvitation: {type: Boolean, required: true }
+  }),
+  accountInvitation: new Schema({
+    email: { type: String, required: true },
+    code: { type: String, unique: true },
+    role: { type: ObjectId, ref: 'accountMemberRole', required: true },
+    organization: { type: ObjectId, ref: 'accountOrganization', required: true },
+    createdBy: { type: ObjectId, ref: 'accountOrganizationMember', required: true },
+    redeemedBy: { type: ObjectId, ref: 'accountUser'},
+    createdAt: { type: Number },
+    expiresAt: { type: Number },
+    updatedAt: { type: Number }
   }),
   salesLeadStatus: new Schema({
     code: { type: String, required: true, unique: true },
@@ -210,6 +221,21 @@ const schemas = {
     createdBy: { type: ObjectId, ref: 'accountOrganizationMember' },
     createdAt: { type: Number },
     updatedAt: { type: Number }
+  }),
+  logItemType: new Schema({
+    code: { type: String, required: true, unique: true },
+    name: { type: String, required: true, unique: true }
+  }), 
+  logItem: new Schema({
+    lead: { type: ObjectId, ref: 'salesLead', required: true },
+    type: { type: ObjectId, ref: 'logItemType', required: true },
+    content: { type: String, required: true },
+    dateTime: { type: Number },
+    location: { type: String },
+    edited: { type: Boolean },
+    createdBy: { type: ObjectId, ref: 'accountOrganizationMember', required: true },
+    createdAt: { type: Number },
+    updatedAt: { type: Number }
   })
 };
 
@@ -219,6 +245,7 @@ schemas.state.index({ code: 1, country: 1 }, { unique: true });
 schemas.addressBookContact.index({ email: 1, group: 1 }, { unique: true });
 schemas.addressBookGroup.index({ name: 1, createdBy: 1 }, { unique: true });
 schemas.accountOrganizationMember.index({ organization: 1, user: 1 }, { unique: true });
+schemas.accountInvitation.index({ email: 1, organization: 1 }, { unique: true });
 schemas.accountMemberRole.index({ code: 1, name: 1 }, { unique: true });
 schemas.salesLead.index({ name: 1, organization: 1 }, { unique: true });
 schemas.salesLeadContact.index({ lead: 1, contact: 1 }, { unique: true });
@@ -252,11 +279,14 @@ export const AccountUserModel = db.model('accountUser', schemas.accountUser);
 export const AccountOrganizationModel = db.model('accountOrganization', schemas.accountOrganization);
 export const AccountOrganizationMemberModel = db.model('accountOrganizationMember', schemas.accountOrganizationMember);
 export const AccountMemberRoleModel = db.model('accountMemberRole', schemas.accountMemberRole);
+export const AccountInvitationModel = db.model('accountInvitation', schemas.accountInvitation);
 export const SalesLeadStatusModel = db.model('salesLeadStatus', schemas.salesLeadStatus);
 export const SalesLeadModel = db.model('salesLead', schemas.salesLead);
 export const SalesLeadContactModel = db.model('salesLeadContact', schemas.salesLeadContact);
 export const SalesLeadOrganizationMemberModel = db.model('salesLeadOrganizationMember', schemas.salesLeadOrganizationMember);
 export const SalesLeadMemberRoleModel = db.model('salesLeadMemberRole', schemas.salesLeadMemberRole);
+export const LogItemTypeModel = db.model('logItemType', schemas.logItemType);
+export const LogItemModel = db.model('logItem', schemas.logItem);
 
 
 schemas.addressBookGroup.post('remove', function() {
@@ -276,7 +306,6 @@ schemas.addressBookGroup.post('remove', function() {
        if (err) {
           return;
         } 
-       return;
       });
     });	
   });
@@ -287,12 +316,10 @@ schemas.addressBookContact.pre('remove', function(next: Function) {
   SalesLeadContactModel.find({ contact: obj['_id']})
   .exec((err: Error, foundObjs: Document[]) => {
      if (err) {
-        next(err);
-        return;
+        return next(err);
      } 	
      if (ObjectUtil.isPresent(foundObjs) && foundObjs.length > 0) {
-       next(new Error('This contact is related to a lead, it cannot be erased'));
-       return;
+       return next(new Error('This contact is related to a lead, it cannot be erased'));
      }
      next();
   });
@@ -306,8 +333,7 @@ schemas.accountUser.pre('save', function (next: Function) {
  
   bcrypt.hash(obj['password'], SALT, (err, hash) => {
       if (err) { 
-        next(err);
-        return;
+        return next(err);
       };
       
       obj['password'] = hash;
@@ -320,16 +346,14 @@ schemas.accountUser.pre('remove', function(next: Function) {
   AccountOrganizationMemberModel.find({ user: obj['_id'] }).populate('role organization')
 	.exec((err: Error, removedObjs: Document[]) => {
     if (err) {
-        next(err);
-        return;
+        return next(err);
     }
     DatabaseObjectUtil.removeArrayPromise(removedObjs)
     .then((results: Document[]) => {
       next();
     })
     .catch((err: Error) => {
-      next(err);
-      return;
+      return next(err);
     });
   });
 });
@@ -390,7 +414,6 @@ schemas.accountOrganizationMember.pre('remove', function(next: Function) {
     })
     .catch((err: any) => {
       next(err);
-      return;
     }); 
   });
 });
@@ -423,9 +446,7 @@ schemas.accountOrganizationMember.post('remove', function() {
         });
       } 
     }); 
-  } else {
-    return;
-  } 
+  }
 });
 
 schemas.accountOrganization.pre('remove', function(next: Function) {
@@ -433,8 +454,7 @@ schemas.accountOrganization.pre('remove', function(next: Function) {
   AccountOrganizationMemberModel.find({ organization: obj['_id'] })
   .exec((err: Error, foundObjs: Document[]) => {
     if (err) {
-      next(err);
-      return;
+      return next(err);
     }
     DatabaseObjectUtil.removeArrayPromise(foundObjs)
     .then((removedObj: Document[]) => {
@@ -442,14 +462,33 @@ schemas.accountOrganization.pre('remove', function(next: Function) {
     })
     .catch((err: any) => {
         next(err);
-        return;
     });	
   }); 	
 });
 
+schemas.accountInvitation.pre('save', function(next: Function) {
+  const obj = this;
+  
+  if (obj.isNew) {
+    // Assign the default invitation code
+    const NUMBER_REQUIRED_DIGITS = 5;
+    const BASE = 36;
+    const code = ('00000' + (Date.now() * Math.pow(BASE, NUMBER_REQUIRED_DIGITS) << 0).toString(BASE)).slice(-NUMBER_REQUIRED_DIGITS);
+    obj['code'] = code;
+    
+    // Assign the expiration date
+    const expirationDays = 3;
+    const MILISECONDS_PER_DAY = 86400000;
+    obj['expiresAt'] = Date.now() + (expirationDays * MILISECONDS_PER_DAY);
+  }
+  
+  next(); 	
+});
+
+
 schemas.salesLeadContact.post('remove', function() {
   const obj: Document = this;
-  if (ObjectUtil.isPresent(obj['contact']['_id']) && ObjectUtil.isBlank(obj['contact']['group'])) { 
+  if (ObjectUtil.isPresent(obj['contact']) && ObjectUtil.isPresent(obj['contact']['_id']) && ObjectUtil.isBlank(obj['contact']['group'])) { 
     const contactQuery = {
       contact: obj['contact'],
       _id: { $ne: obj['_id'] } 
@@ -465,15 +504,10 @@ schemas.salesLeadContact.post('remove', function() {
             if (err) {
               return;
             }
-            return;
         });
       } 
-      
-      return;
     });  
   } 
-  
-  return;
 });
 
 schemas.salesLeadOrganizationMember.post('remove', function() {
@@ -501,13 +535,35 @@ schemas.salesLeadOrganizationMember.post('remove', function() {
             if (err) {
               return;
             }
-          return;
         });
       } 
     });
   });
 });
 
+
+schemas.salesLead.pre('save', function(next: Function) {
+  const obj: Document = this;
+  if (obj.isNew && ObjectUtil.isBlank(obj['status'])) {    
+    SalesLeadStatusModel.findOne({ code: 'OPP' })
+    .lean().exec((err: any, found: Document) => {
+      if (err) {
+        next(err);
+        return;
+      }
+      
+      if (ObjectUtil.isBlank(found['_id'])) {
+        next(new Error('A status should be specified for this lead'));
+        return;
+      }
+
+      obj['status'] = found['_id'];
+      next();
+    }); 
+  } else {
+    next(); 
+  }
+});
 
 schemas.salesLead.pre('remove', function(next: Function) {
   const obj: Document = this;
@@ -519,26 +575,23 @@ schemas.salesLead.pre('remove', function(next: Function) {
       } 
     };
     
-  SalesLeadContactModel.find({lead: obj['_id']}).populate(contactPopulation).populate('lead')
+  SalesLeadContactModel.find({lead: obj['_id']}).populate(contactPopulation)
   .exec((err: Error, foundObjs: Document[]) => {
     if (err) {
-      next(err);
-      return;
+      return next(err);
     }
     DatabaseObjectUtil.removeArrayPromise(foundObjs)
     .then((removedObj: Document[]) => {
       SalesLeadOrganizationMemberModel.find({lead: obj['_id']})
       .remove((err: Error, foundObjs: Document[]) => {
         if (err) {
-          next(err);
-          return;
+          return next(err);
         }
        next();
       });
     })
     .catch((err: any) => {
 		  next(err);
-      return;
 		});	
   });
 });

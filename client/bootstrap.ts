@@ -13,36 +13,46 @@ import './components/address-book/addressBook.service';
 import './components/lead/lead';
 import './components/lead/lead.service';
 import './components/helper/account.service';
+import './components/socket-io-cymplar/socket-io-cymplar.factory';
+import { MainAccountController } from './components/main-account/main-account';
+import { mainAccountNavbar } from './components/navbar-account/navbar-account.directive';
+import './components/account/account';
+import './components/invitation/invitation.service';
+
+import {ObjectUtil} from './core/util';
+
 declare var moment: moment.MomentStatic;
 
 namespace app {
   
   /** @ngInject */
-  function runBlock($rootScope: angular.IRootScopeService, $log: angular.ILogService, $state: any, $stateParams: any, AuthToken: any) {
+  function runBlock($rootScope: angular.IRootScopeService, $log: angular.ILogService, $state: any, $stateParams: any, AuthToken: any,
+    $location: any) {
     let NoTokenState = ['login', 'signup'];
     // simple middleware to prevent unauthorized access and double log in attempt
     
     $rootScope.$on('$stateChangeStart', (event: any, toState: any, toParams: any, fromState: any, fromParams: any) => {
-
+      AuthToken.setInvitation($location.search()['inv']);
       if (NoTokenState.indexOf(toState.name) === -1) { // should be logged in
         if (!AuthToken.isLoggedIn()) { // prevent double log in
           event.preventDefault();
-          $state.go('login', {}, { reload: true });
+          const urlParam = AuthToken.getInvitationUrlParam();
+          $state.go('login', urlParam, { reload: true });
         }
       } else { // should not be logged in
         if (AuthToken.isLoggedIn()) { // prevent double log in
           event.preventDefault();
           $state.go('main.dashboard', {}, { reload: true });
         }
-
       }
 
     });
 
     $rootScope.$on('badToken', (event: any, data: any) => {
       console.log(data);
+      const urlParam = AuthToken.getInvitationUrlParam();
       AuthToken.logout();
-      $state.go('login', {}, { reload: true });
+      $state.go('login', urlParam, { reload: true });
 
     });
     
@@ -82,12 +92,10 @@ namespace app {
         controllerAs: 'mainCtrl',
         resolve: {
           user: function($http: angular.IHttpService, AuthToken: any, $rootScope: any, $AccountRESTService: any) {
-
             return $AccountRESTService.accountUser().then(function(response: any) {
               if (response.success) {
                 return response.data[0];
               }
-
             });
           },
           organization: function($http: angular.IHttpService, $AccountRESTService: any) {
@@ -95,7 +103,6 @@ namespace app {
               if (response.success) {
                 return response.data;
               }
-
             });
           },
           organizationMember: function($http: angular.IHttpService, $AccountRESTService: any) {
@@ -103,12 +110,11 @@ namespace app {
               if (response.success) {
                 return response.data[0];
               }
-
             });
           },
           companies: function($http: angular.IHttpService, $AddressBookRESTService: any) {
             return $AddressBookRESTService.allCompanies();
-          },
+            },
           leads: function($http: angular.IHttpService, $LeadRESTService: any) {
             return $LeadRESTService.allLeads();
           },
@@ -117,12 +123,27 @@ namespace app {
               if (response.success) {
                 return response.data;
               } else {
-                return {}
+                return {};
               }
-
             });
+          },
+          invitation: (AuthToken: any, $InvitationRESTService: any) => {
+            const invitation = AuthToken.getInvitation();
+             if (ObjectUtil.isBlank(invitation)) {
+              return { success: true, message: 'There was no invitation to accept.'};
+            } else {
+              return $InvitationRESTService.acceptInvitation(invitation).then((response: any) => {
+                if (response.success) {
+                  AuthToken.setInvitation();
+                  return response.data;
+                } else {
+                  return { success: false, message: 'There was an error, the invitation could not be accepted.'};
+                }
+              });
+            }
           }
-        })
+        }
+      })
       .state('main.dashboard', {
         url: '/dashboard',
         views: {
@@ -131,8 +152,29 @@ namespace app {
             controller: 'MainController',
             controllerAs: 'mainCtrl',
           }
-
-        },
+        }
+      })
+      .state('main-account', {
+        abstract: true,
+        templateUrl: 'components/main-account/main-account.html',
+        controller: 'MainAccountController',
+        controllerAs: 'mainAccCtrl',
+        resolve: {
+          user: function($http: angular.IHttpService, AuthToken: any, $rootScope: any, $AccountRESTService: any) {
+            return $AccountRESTService.accountUser().then(function(response: any) {
+              if (response.success) {
+                return response.data[0];
+              }
+            });
+          },
+          memberships: function($http: angular.IHttpService, $AccountRESTService: any) {
+            return $AccountRESTService.accountOrganizations().then(function(response: any) {
+              if (response.success) {
+                return response.data;
+              }
+            });
+          }
+        }
       });
 
     $urlRouterProvider.otherwise('/dashboard');
@@ -149,6 +191,7 @@ namespace app {
     'ui.router',
     'ui.bootstrap',
     'angular-multiple-transclusion',
+    'angular.filter',
     'toastr',
     'ngCookies',
     'app.contacts',
@@ -159,14 +202,21 @@ namespace app {
     'app.addressBook',
     'app.helper',
     'app.ui.helper',
-    'app.lead'
+    'app.lead',
+    'ngTagsInput',
+    'rzModule',
+    'app.socket-io-cymplar',
+    'app.account-settings',
+    'app.invitation'
   ])
     .config(config)
     .config(routerConfig)
     .run(runBlock)
     .constant('moment', moment)
     .controller('MainController', MainController)
-    .directive('mainNavbar', mainNavbar);
+    .directive('mainNavbar', mainNavbar)
+    .controller('MainAccountController', MainAccountController)
+    .directive('mainAccountNavbar', mainAccountNavbar);
 
   const appContainer = document.documentElement;
   appContainer.setAttribute('ng-strict-di', 'true');
