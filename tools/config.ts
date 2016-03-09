@@ -12,21 +12,19 @@ const pkg = JSON.parse(fs.readFileSync(`${CWD}/package.json`, 'utf8'));
 const ENV: string = argv['env'] || process.env.profile || 'dev';
 process.env.profile = ENV;
 
-const CYMPLAR_MONGO_URI: string = argv['CYMPLAR_MONGO_URI'] || process.env.CYMPLAR_MONGO_URI || 
-  //'mongodb://cymplarUser:cympl4rUs3r@ds033175.mongolab.com:33175/cymplar';
-  'mongodb://cymplarUser:cympl4rUs3r@ds051575.mongolab.com:51575/cymplardev';
+const CYMPLAR_MONGO_URI: string = argv['CYMPLAR_MONGO_URI'] || process.env.CYMPLAR_MONGO_URI;
 process.env.CYMPLAR_MONGO_URI = CYMPLAR_MONGO_URI;
 
-const CYMPLAR_SECRET: string = argv['CYMPLAR_SECRET'] || process.env.CYMPLAR_SECRET || 'cymplarSecret';
+const CYMPLAR_SECRET: string = argv['CYMPLAR_SECRET'] || process.env.CYMPLAR_SECRET;
 process.env.CYMPLAR_SECRET = CYMPLAR_SECRET;
 
-const CYMPLAR_SENDGRID_USER: string = argv['CYMPLAR_SENDGRID_USER'] || process.env.CYMPLAR_SENDGRID_USER || 'johannamail';
+const CYMPLAR_SENDGRID_USER: string = argv['CYMPLAR_SENDGRID_USER'] || process.env.CYMPLAR_SENDGRID_USER;
 process.env.CYMPLAR_SENDGRID_USER = CYMPLAR_SENDGRID_USER;
 
-const CYMPLAR_SENDGRID_PASSWORD: string = argv['CYMPLAR_SENDGRID_PASSWORD'] || process.env.CYMPLAR_SENDGRID_PASSWORD || 's3ndGr1d-3ng';
+const CYMPLAR_SENDGRID_PASSWORD: string = argv['CYMPLAR_SENDGRID_PASSWORD'] || process.env.CYMPLAR_SENDGRID_PASSWORD;
 process.env.CYMPLAR_SENDGRID_PASSWORD = CYMPLAR_SENDGRID_PASSWORD;
 
-const CYMPLAR_SENDGRID_ORIGIN: string = argv['CYMPLAR_SENDGRID_ORIGIN'] || process.env.CYMPLAR_SENDGRID_ORIGIN || 'johanna@neuli.net';
+const CYMPLAR_SENDGRID_ORIGIN: string = argv['CYMPLAR_SENDGRID_ORIGIN'] || process.env.CYMPLAR_SENDGRID_ORIGIN;
 process.env.CYMPLAR_SENDGRID_ORIGIN = CYMPLAR_SENDGRID_ORIGIN;
 
 export const PORT: number = argv['port'] || 5555;
