@@ -61,7 +61,7 @@ namespace Login {
 		
 		resgisterNow() {
 			const urlParam = this.AuthToken.getInvitationUrlParam();
-      		this$state.go('signup', urlParam, { reload: true });
+      		this.$state.go('signup', urlParam, { reload: true });
 		}
 	};
 	angular
