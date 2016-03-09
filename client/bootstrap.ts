@@ -36,7 +36,8 @@ namespace app {
       if (NoTokenState.indexOf(toState.name) === -1) { // should be logged in
         if (!AuthToken.isLoggedIn()) { // prevent double log in
           event.preventDefault();
-          $state.go('login', {}, { reload: true });
+          const urlParam = AuthToken.getInvitationUrlParam();
+          $state.go('login', urlParam, { reload: true });
         }
       } else { // should not be logged in
         if (AuthToken.isLoggedIn()) { // prevent double log in
@@ -49,8 +50,9 @@ namespace app {
 
     $rootScope.$on('badToken', (event: any, data: any) => {
       console.log(data);
+      const urlParam = AuthToken.getInvitationUrlParam();
       AuthToken.logout();
-      $state.go('login', {}, { reload: true });
+      $state.go('login', urlParam, { reload: true });
 
     });
     
