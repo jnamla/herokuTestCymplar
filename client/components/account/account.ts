@@ -151,7 +151,11 @@ namespace accountSettings {
 			} else {
 				this.checkingEmail = false;
 			}
-		};
+		}
+        
+        unAuthorized(): boolean {
+            return this.profile.role.code !== 'OWNER';
+        }
     }
     
     export class AccountOrganizationTeamController {
