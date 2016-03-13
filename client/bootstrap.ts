@@ -12,6 +12,7 @@ import './components/address-book/addressBook';
 import './components/address-book/addressBook.service';
 import './components/lead/lead';
 import './components/lead/lead.service';
+import './components/lead/lead.directive';
 import './components/helper/account.service';
 import './components/socket-io-cymplar/socket-io-cymplar.factory';
 import { MainAccountController } from './components/main-account/main-account';
@@ -33,7 +34,7 @@ namespace app {
     
     $rootScope.$on('$stateChangeStart', (event: any, toState: any, toParams: any, fromState: any, fromParams: any) => {
       
-      if (!AuthToken.getInvitation()){
+      if (!AuthToken.getInvitation()) {
         AuthToken.setInvitation($location.search()['inv']);  
       }
       if (NoTokenState.indexOf(toState.name) === -1) { // should be logged in
@@ -194,6 +195,7 @@ namespace app {
     'ngResource',
     'ui.router',
     'ui.bootstrap',
+    'ui.bootstrap.datetimepicker',
     'angular-multiple-transclusion',
     'angular.filter',
     'toastr',

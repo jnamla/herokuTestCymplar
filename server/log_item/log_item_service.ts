@@ -8,7 +8,37 @@ export class LogItemService extends BaseService<LogItem> {
 
 	constructor() {
 		const defaultModelOptions: ModelOptions = {
-			population: 'type',
+			population: [
+				{
+					path: 'type'
+				},
+				{
+					path: 'createdBy',
+					select: 'member role',
+					populate: [
+						{
+							path: 'member',
+							select: 'user role -_id',
+							model: 'accountOrganizationMember',
+							populate: [ 
+								{
+									path: 'user',
+									select: 'firstName lastName middleName -_id',
+									model: 'accountUser'	
+								},
+								{
+									path: 'role',
+									model: 'accountMemberRole'
+								}
+							]
+						},
+						{
+							path: 'role',
+							model: 'salesLeadMemberRole'
+						}
+					]	
+				}
+			],
 			copyAuthorizationData: ''
 		};
 		super(LogItemModel, defaultModelOptions);
@@ -58,7 +88,6 @@ export class LogItemService extends BaseService<LogItem> {
 		return new Promise<LogItem[]>((resolve: Function, reject: Function) => {
 			this.findLimited(data, newOptions)
 			.then((logItems: LogItem[]) => {
-				console.log(JSON.stringify(logItems));
 				if (logItems.length === 1) {
 					if (ObjectUtil.isPresent(logItems[0].createdAt)) {
 						newOptions.additionalData = {
@@ -136,7 +165,8 @@ export class LogItemService extends BaseService<LogItem> {
 	
 	protected validateAuthDataPostSearchUpdate(modelOptions: ModelOptions = {}, 
 		data?: LogItem): AuthorizationResponse {
-		const isLogItemOwner =  modelOptions.authorization.leadMember._id.toString() === data.createdBy.toString();
+		const isLogItemOwner =  modelOptions.authorization.leadMember._id.toString() === 
+			ObjectUtil.getStringUnionProperty(data.createdBy).toString();
 		if (isLogItemOwner) {
 			return this.createAuthorizationResponse();
 		}
@@ -145,7 +175,8 @@ export class LogItemService extends BaseService<LogItem> {
 	
 	protected validateAuthDataPostSearchRemove(modelOptions: ModelOptions = {}, 
 		data?: LogItem): AuthorizationResponse {
-		const isLogItemOwner =  modelOptions.authorization.leadMember._id.toString() === data.createdBy.toString();
+		const isLogItemOwner =  modelOptions.authorization.leadMember._id.toString() === 
+			ObjectUtil.getStringUnionProperty(data.createdBy).toString();
 		if (isLogItemOwner) {
 			return this.createAuthorizationResponse();
 		}

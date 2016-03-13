@@ -1,0 +1,76 @@
+<div class="modal-content">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close" ng-click="mUsrDtlCtrl.cancel()"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="myModalLabel">Edit my user details</h4>
+    </div>
+    <div class="modal-body">
+        <div class="form-horizontal">
+            <div class="form-group">
+                <div class="col-md-5 control-label">
+                    <label for="username" class="margin-b-n"><strong class="text-danger">*</strong> Username</label>
+                    <i class="fa fa-spinner pull-right fa-lg" ng-class="{'fa-spin' : mUsrDtlCtrl.checkingUserName}" ng-show="mUsrDtlCtrl.checkingUserName"></i>
+                    <i class="fa fa-check pull-right fa-lg" ng-show="mUsrDtlCtrl.availableUserName"></i>
+                </div>
+                <div class="col-md-7">
+                    <input type="username" class="form-control" id="username" required ng-model="mUsrDtlCtrl.newDetails.username" ng-blur="mUsrDtlCtrl.userNameChanged()">
+                </div>
+            </div>
+            <div class="form-group" ng-show="mUsrDtlCtrl.availableUserName == false">
+                <p class="pull-right text-danger">The username is already been used</p>
+            </div>
+            
+            <div class="form-group">
+                <div class="col-md-5 control-label">
+                    <label for="firstName" class="margin-b-n"><strong class="text-danger">*</strong> Username</label>
+                </div>
+                <div class="col-md-7">
+                    <input type="firstName" class="form-control" id="firstName" ng-model="mUsrDtlCtrl.newDetails.firstName">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <div class="col-md-5 control-label">
+                    <label for="middleName" class="margin-b-n">Middle name</label>
+                </div>
+                <div class="col-md-7">
+                    <input type="text" class="form-control" id="middleName" name="middleName" ng-model="mUsrDtlCtrl.newDetails.middleName">
+                </div>
+            </div>
+        
+            <div class="form-group">
+                <div class="col-md-5 control-label">
+                    <label for="lastName" class="margin-b-n"><strong class="text-danger">*</strong> Last name</label>
+                </div>
+                <div class="col-md-7">
+                    <input type="text" class="form-control" id="lastname" name="lastName" ng-model="smUsrDtlCtrl.newDetails.lastName" required>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <div class="col-md-5 control-label">
+                    <label for="lastName" class="margin-b-n"><strong class="text-danger">*</strong> Profile Image</label>
+                </div>
+                <form name="myForm">
+                    <fieldset>
+                        
+                    <input class="form-control" ngf-select="" ng-model="mUsrDtlCtrl.newDetails.picture" name="file" required="" type="file">
+                    <i ng-show="myForm.file.$error.required">*required</i>
+                    <br>
+        
+                    <button ng-disabled="!myForm.$valid" ng-click="uploadPic(mUsrDtlCtrl.newDetails.picture)">Submit</button>
+                    <img ngf-src="mUsrDtlCtrl.newDetails.picture" class="thumb">
+                    <span class="progress" ng-show="picFile.progress >= 0">
+                        <div class="ng-binding" style="width:{{picFile.progress}}%" ng-bind="picFile.progress + '%'"></div>
+                    </span>
+                    <span ng-show="picFile.result">Upload Successful</span>
+                    </fieldset>
+                    <br>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal" ng-click="mUsrDtlCtrl.cancel()">Close</button>
+        <button type="button" class="btn btn-primary"  ng-disabled="mUsrDtlCtrl.checkingUserName" ng-click="mUsrDtlCtrl.save()">Save changes</button>
+    </div>
+</div>
